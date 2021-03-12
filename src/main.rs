@@ -20,10 +20,18 @@ fn render(
 
   let (width, height) = canvas.output_size()?;
 
+  let (frame_width, frame_height) = player.sprite.size();
+  let current_frame = Rect::new(
+    player.sprite.x() + frame_width as i32 * player.current_frame,
+    player.sprite.y() + frame_height as i32 * player.get_direction_spritesheet_row(),
+    frame_width,
+    frame_height,
+  );
+
   let screen_position = player.position + Point::new(width as i32 / 2, height as i32 / 2);
-  let screen_rect = Rect::from_center(screen_position, player.sprite.width(), player.sprite.height());
+  let screen_rect = Rect::from_center(screen_position, frame_width, frame_height);
   
-  canvas.copy(texture, player.sprite, screen_rect)?;
+  canvas.copy(texture, current_frame, screen_rect)?;
 
   canvas.present();
 
@@ -56,6 +64,7 @@ fn main() -> Result<(), String> {
     sprite: Rect::new(0, 0, 26, 36),
     speed: 0,
     direction: Direction::Right,
+    current_frame: 0,
   };
 
   let mut event_pump = sdl_context.event_pump()?;
