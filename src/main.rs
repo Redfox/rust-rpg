@@ -21,8 +21,6 @@ pub enum MovementCommand {
   Move(Direction),
 }
 
-const PLAYER_MOVEMENT_SPEED: i32 = 20;
-
 fn direction_spritesheet_row(direction: Direction) -> i32 {
   use self::Direction::*;
   match direction {
@@ -80,7 +78,7 @@ fn main() -> Result<(), String> {
       .with(animator::Animator, "Animator", &[])
       .build();
 
-  let mut world = World::new();
+  let mut world = WorldExt::new();
   dispatcher.setup(&mut world);
   renderer::SystemData::setup(&mut world);
 
@@ -101,8 +99,6 @@ fn main() -> Result<(), String> {
     left_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Left),
     right_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Right),
   };
-
-  let mut world = World::new();
   
   world.create_entity()
     .with(KeyboardControlled)
@@ -123,22 +119,22 @@ fn main() -> Result<(), String> {
           Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
               break 'running;
           },
-          Event::KeyDown { keycode: Some(Keycode::Left), repeat: false, .. } => {
+          Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => {
               movement_command = Some(MovementCommand::Move(Direction::Left));
           },
-          Event::KeyDown { keycode: Some(Keycode::Right), repeat: false, .. } => {
+          Event::KeyDown { keycode: Some(Keycode::D), repeat: false, .. } => {
               movement_command = Some(MovementCommand::Move(Direction::Right));
           },
-          Event::KeyDown { keycode: Some(Keycode::Up), repeat: false, .. } => {
+          Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => {
               movement_command = Some(MovementCommand::Move(Direction::Up));
           },
-          Event::KeyDown { keycode: Some(Keycode::Down), repeat: false, .. } => {
+          Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => {
               movement_command = Some(MovementCommand::Move(Direction::Down));
           },
-          Event::KeyUp { keycode: Some(Keycode::Left), repeat: false, .. } |
-          Event::KeyUp { keycode: Some(Keycode::Right), repeat: false, .. } |
-          Event::KeyUp { keycode: Some(Keycode::Up), repeat: false, .. } |
-          Event::KeyUp { keycode: Some(Keycode::Down), repeat: false, .. } => {
+          Event::KeyUp { keycode: Some(Keycode::A), repeat: false, .. } |
+          Event::KeyUp { keycode: Some(Keycode::D), repeat: false, .. } |
+          Event::KeyUp { keycode: Some(Keycode::W), repeat: false, .. } |
+          Event::KeyUp { keycode: Some(Keycode::S), repeat: false, .. } => {
               movement_command = Some(MovementCommand::Stop);
           },
           _ => {}
