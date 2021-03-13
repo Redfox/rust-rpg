@@ -17,6 +17,10 @@ pub struct KeyboardControlled;
 #[derive(Component, Debug)]
 pub struct Position(pub Point);
 
+#[derive(Component, Debug, Default)]
+#[storage(NullStorage)]
+pub struct Enemy;
+
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub struct Velocity {
@@ -29,6 +33,15 @@ pub struct Velocity {
 pub struct Sprite {
   pub spritesheet: usize,
   pub region: Rect,
+}
+
+#[derive(Component, Debug)]
+#[storage(VecStorage)]
+pub struct Moving {
+  pub left: bool,
+  pub right: bool,
+  pub up: bool,
+  pub down: bool,
 }
 
 #[derive(Component, Debug)]

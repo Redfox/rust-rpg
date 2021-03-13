@@ -3,6 +3,7 @@ mod physics;
 mod animator;
 mod keyboard;
 mod renderer;
+mod ai;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
@@ -17,7 +18,7 @@ use std::time::Duration;
 use crate::components::*;
 
 pub enum MovementCommand {
-  Stop,
+  Stop(Direction),
   Move(Direction),
 }
 
@@ -51,6 +52,46 @@ fn character_animation_frames(spritesheet: usize, top_left_frame: Rect, directio
   frames
 }
 
+fn initialize_player(world: &mut World, player_spritesheet: usize) {
+  let player_top_left_frame = Rect::new(0, 0, 26, 36);
+
+  let player_animation = MovementAnimation {
+    current_frame: 0,
+    up_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Up),
+    down_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Down),
+    left_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Left),
+    right_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Right),
+  };
+  
+  world.create_entity()
+    .with(KeyboardControlled)
+    .with(Position(Point::new(0, 0)))
+    .with(Moving { left: false, right: false, up: false, down: false })
+    .with(Velocity { speed: 0, direction: Direction::Right })
+    .with(player_animation.right_frames[0].clone())
+    .with(player_animation)
+    .build();
+}
+
+fn initialize_enemy(world: &mut World, enemy_spritesheet: usize, position: Point) {
+  let enemy_top_left_frame = Rect::new(0, 0, 32, 36);
+
+  let enemy_animation = MovementAnimation {
+    current_frame: 0,
+    up_frames: character_animation_frames(enemy_spritesheet, enemy_top_left_frame, Direction::Up),
+    down_frames: character_animation_frames(enemy_spritesheet, enemy_top_left_frame, Direction::Down),
+    left_frames: character_animation_frames(enemy_spritesheet, enemy_top_left_frame, Direction::Left),
+    right_frames: character_animation_frames(enemy_spritesheet, enemy_top_left_frame, Direction::Right),
+  };
+
+  world.create_entity()
+    .with(Enemy)
+    .with(Position(position))
+    .with(Velocity { speed: 0, direction: Direction::Right })
+    .with(enemy_animation.right_frames[0].clone())
+    .with(enemy_animation)
+    .build();
+} 
 
 fn main() -> Result<(), String> {
 
@@ -74,6 +115,7 @@ fn main() -> Result<(), String> {
 
   let mut dispatcher = DispatcherBuilder::new()
       .with(keyboard::Keyboard, "Keyboard", &[])
+      .with(ai::AI, "AI", &[])
       .with(physics::Physics, "Physics", &[])
       .with(animator::Animator, "Animator", &[])
       .build();
@@ -87,26 +129,16 @@ fn main() -> Result<(), String> {
 
   let textures = [
     texture_creator.load_texture("assets/bardo.png")?,
+    texture_creator.load_texture("assets/reaper.png")?,
   ];
 
   let player_spritesheet = 0;
-  let player_top_left_frame = Rect::new(0, 0, 26, 36);
+  let enemy_spritesheet = 1;
 
-  let player_animation = MovementAnimation {
-    current_frame: 0,
-    up_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Up),
-    down_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Down),
-    left_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Left),
-    right_frames: character_animation_frames(player_spritesheet, player_top_left_frame, Direction::Right),
-  };
-  
-  world.create_entity()
-    .with(KeyboardControlled)
-    .with(Position(Point::new(0, 0)))
-    .with(Velocity { speed: 0, direction: Direction::Right })
-    .with(player_animation.right_frames[0].clone())
-    .with(player_animation)
-    .build();
+  initialize_player(&mut world, player_spritesheet);
+  initialize_enemy(&mut world, enemy_spritesheet, Point::new(-150, -150));
+  initialize_enemy(&mut world, enemy_spritesheet, Point::new(150, -190));
+  initialize_enemy(&mut world, enemy_spritesheet, Point::new(-150, -170));
 
   let mut event_pump = sdl_context.event_pump()?;
   let mut i = 0;
@@ -115,29 +147,35 @@ fn main() -> Result<(), String> {
     
     for event in event_pump.poll_iter() {
       match event {
-          Event::Quit {..} |
-          Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-              break 'running;
-          },
-          Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => {
-              movement_command = Some(MovementCommand::Move(Direction::Left));
-          },
-          Event::KeyDown { keycode: Some(Keycode::D), repeat: false, .. } => {
-              movement_command = Some(MovementCommand::Move(Direction::Right));
-          },
-          Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => {
-              movement_command = Some(MovementCommand::Move(Direction::Up));
-          },
-          Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => {
-              movement_command = Some(MovementCommand::Move(Direction::Down));
-          },
-          Event::KeyUp { keycode: Some(Keycode::A), repeat: false, .. } |
-          Event::KeyUp { keycode: Some(Keycode::D), repeat: false, .. } |
-          Event::KeyUp { keycode: Some(Keycode::W), repeat: false, .. } |
-          Event::KeyUp { keycode: Some(Keycode::S), repeat: false, .. } => {
-              movement_command = Some(MovementCommand::Stop);
-          },
-          _ => {}
+        Event::Quit {..} |
+        Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+          break 'running;
+        },
+        Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => {
+          movement_command = Some(MovementCommand::Move(Direction::Left));
+        },
+        Event::KeyDown { keycode: Some(Keycode::D), repeat: false, .. } => {
+          movement_command = Some(MovementCommand::Move(Direction::Right));
+        },
+        Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => {
+          movement_command = Some(MovementCommand::Move(Direction::Up));
+        },
+        Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => {
+          movement_command = Some(MovementCommand::Move(Direction::Down));
+        },
+        Event::KeyUp { keycode: Some(Keycode::A), repeat: false, .. } => {
+          movement_command = Some(MovementCommand::Stop(Direction::Left));
+        },
+        Event::KeyUp { keycode: Some(Keycode::D), repeat: false, .. } => {
+          movement_command = Some(MovementCommand::Stop(Direction::Right));
+        },
+        Event::KeyUp { keycode: Some(Keycode::W), repeat: false, .. } => {
+          movement_command = Some(MovementCommand::Stop(Direction::Up));
+        }
+        Event::KeyUp { keycode: Some(Keycode::S), repeat: false, .. } => {
+          movement_command = Some(MovementCommand::Stop(Direction::Down));
+        },
+        _ => {}
       }
     }
 
