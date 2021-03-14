@@ -93,6 +93,31 @@ fn initialize_enemy(world: &mut World, enemy_spritesheet: usize, position: Point
     .build();
 } 
 
+fn render_background(world: &mut World, background_spritesheet: usize) {
+  let top_left_frame = Rect::new(83, 43, 30, 30);
+  let (frame_width, frame_height) = top_left_frame.size();
+  let y_offset = top_left_frame.y() + frame_height as i32;
+  
+  for y in 0..20 {
+    for x in 0..30 {
+      let sprite = Sprite {
+        spritesheet: background_spritesheet,
+        region: Rect::new(
+          top_left_frame.x() + frame_width as i32,
+          y_offset,
+          frame_width,
+          frame_height
+        ),
+      };
+  
+      world.create_entity()
+      .with(Position(Point::new(-385 + (x * 30), -285 + (y * 30))))
+      .with(sprite)
+      .build();
+    }
+  }
+} 
+
 fn main() -> Result<(), String> {
 
   let sdl_context = sdl2::init()?;
@@ -130,11 +155,14 @@ fn main() -> Result<(), String> {
   let textures = [
     texture_creator.load_texture("assets/bardo.png")?,
     texture_creator.load_texture("assets/reaper.png")?,
+    texture_creator.load_texture("assets/background.png")?,
   ];
 
   let player_spritesheet = 0;
   let enemy_spritesheet = 1;
+  let background_spritesheet = 2;
 
+  render_background(&mut world, background_spritesheet);
   initialize_player(&mut world, player_spritesheet);
   initialize_enemy(&mut world, enemy_spritesheet, Point::new(-150, -150));
   initialize_enemy(&mut world, enemy_spritesheet, Point::new(150, -190));

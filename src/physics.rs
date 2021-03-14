@@ -13,16 +13,24 @@ impl<'a> System<'a> for Physics {
     for (pos, vel) in (&mut data.0, &data.1).join() {
       match vel.direction {
         Left => {
-          pos.0 = pos.0.offset(-vel.speed, 0);
+          if pos.0.x >= -370 {
+            pos.0 = pos.0.offset(-vel.speed, 0);
+          }  
         },
         Right => {
-          pos.0 = pos.0.offset(vel.speed, 0);
+          if pos.0.x <= 370 {
+            pos.0 = pos.0.offset(vel.speed, 0);
+          } 
         },
         Up => {
+          if pos.0.y >= -250 {
             pos.0 = pos.0.offset(0, -vel.speed);
+          }
         },
         Down => {
+          if pos.0.y <= 250 {
             pos.0 = pos.0.offset(0, vel.speed);
+          }
         },
       }
     }
