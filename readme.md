@@ -1,6 +1,7 @@
 # Rust rpg game
 
 ![](demo.png)
+
 RPG Game created in [Rust](https://www.rust-lang.org/) to learning the language 
 
 ## Running the game
