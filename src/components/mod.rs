@@ -1,3 +1,9 @@
+pub mod ai;
+pub mod physics;
+pub mod animator;
+pub mod keyboard;
+pub mod renderer;
+
 use specs::prelude::*;
 use specs_derive::Component;
 use sdl2::rect::{Point, Rect};

@@ -1,6 +1,5 @@
 use specs::prelude::*;
 use sdl2::rect::{Point, Rect};
-use sdl2::pixels::Color;
 use sdl2::render::{WindowCanvas, Texture};
 
 use crate::components::*;
@@ -12,11 +11,9 @@ pub type SystemData<'a> = (
 
 pub fn render(
   canvas: &mut WindowCanvas,
-  background: Color,
   texture: &[Texture],
   data: SystemData
 ) -> Result<(), String> {
-  canvas.set_draw_color(background);
   canvas.clear();
 
   let (width, height) = canvas.output_size()?;
